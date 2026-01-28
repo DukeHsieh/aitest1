@@ -1,0 +1,5 @@
+{
+  "name": "AI Executive Quiz",
+  "description": "A dynamic AI knowledge assessment tool for management executives, featuring real-time question generation via Gemini and a local leaderboard system.",
+  "requestFramePermissions": []
+}
