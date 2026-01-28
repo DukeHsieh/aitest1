@@ -312,9 +312,10 @@ const App: React.FC = () => {
       const q = await generateQuizQuestions(20);
       setQuestions(q);
       setAppState(AppState.QUIZ);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setErrorMsg("生成題目失敗。請確認網路連線，或檢查您的 API Key 是否正確設定。");
+      // Use the specific error message from the exception if available
+      setErrorMsg(e.message || "生成題目失敗。請確認網路連線，或檢查您的 API Key 是否正確設定。");
       setAppState(AppState.ERROR);
     }
   };
@@ -368,7 +369,7 @@ const App: React.FC = () => {
         <div className="p-8 text-center flex flex-col items-center">
           <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">發生錯誤</h2>
-          <p className="text-slate-300 mb-6 max-w-xs mx-auto">{errorMsg}</p>
+          <p className="text-slate-300 mb-6 max-w-xs mx-auto text-sm">{errorMsg}</p>
           <div className="flex gap-3">
              <button 
               onClick={() => {

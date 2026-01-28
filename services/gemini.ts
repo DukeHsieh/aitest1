@@ -1,11 +1,29 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question } from "../types";
 
-// Safely retrieve the API key to avoid "process is not defined" errors in browser environments
+// Safely retrieve the API key supporting various build environments (Vite, Webpack, etc.)
 const getApiKey = () => {
+  // 1. Try standard Vite/Modern env (Recommended for Vercel Frontend)
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      // @ts-ignore
+      if (import.meta.env.VITE_API_KEY) return import.meta.env.VITE_API_KEY;
+      // @ts-ignore
+      if (import.meta.env.API_KEY) return import.meta.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  // 2. Try process.env (Legacy/Webpack/Node)
   try {
     if (typeof process !== 'undefined' && process.env) {
-      return process.env.API_KEY;
+      // Check for common frontend prefixes
+      return process.env.VITE_API_KEY || 
+             process.env.REACT_APP_API_KEY || 
+             process.env.NEXT_PUBLIC_API_KEY || 
+             process.env.API_KEY;
     }
   } catch (e) {
     console.warn("Environment process not defined");
@@ -43,12 +61,16 @@ Create a set of multiple-choice questions specifically focusing on the following
 `;
 
 export const generateQuizQuestions = async (count: number = 20): Promise<Question[]> => {
-  if (!apiKey) {
-    throw new Error("API Key 未設定。請在部署平台 (Vercel) 設定環境變數 API_KEY。");
+  const currentKey = getApiKey();
+  if (!currentKey || currentKey === 'MISSING_KEY') {
+    throw new Error("API Key 未設定。請在 Vercel 設定環境變數 'VITE_API_KEY'。");
   }
 
+  // Re-initialize to ensure we use the latest key if it was somehow set late
+  const ai = new GoogleGenAI({ apiKey: currentKey });
+
   try {
-    const response = await genAI.models.generateContent({
+    const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate ${count} difficult and practical AI knowledge questions for managers in Traditional Chinese (Taiwan). Focus strictly on Terminology, Tool Usage, and Industry Info.`,
       config: {
