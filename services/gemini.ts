@@ -1,7 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question } from "../types";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safely retrieve the API key to avoid "process is not defined" errors in browser environments
+const getApiKey = () => {
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    console.warn("Environment process not defined");
+  }
+  return undefined;
+};
+
+const apiKey = getApiKey();
+// Initialize with a fallback to allow app to load even if key is missing (validation happens on call)
+const genAI = new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
 
 const SYSTEM_INSTRUCTION = `
 You are an expert AI consultant creating a high-quality quiz for company executives and management. 
@@ -29,6 +43,10 @@ Create a set of multiple-choice questions specifically focusing on the following
 `;
 
 export const generateQuizQuestions = async (count: number = 20): Promise<Question[]> => {
+  if (!apiKey) {
+    throw new Error("API Key 未設定。請在部署平台 (Vercel) 設定環境變數 API_KEY。");
+  }
+
   try {
     const response = await genAI.models.generateContent({
       model: "gemini-3-flash-preview",
